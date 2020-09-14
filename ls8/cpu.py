@@ -113,3 +113,7 @@ class CPU:
                 print(self.reg[operand_a])
                 self.pc += 2
 
+
+#############################
+# Run with `python3 ls8.py` #
+#############################
