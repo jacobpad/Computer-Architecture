@@ -12,13 +12,17 @@ class CPU:
         self.ram = [None] * 256  # Memory
         self.pc = 0  # Pointer to track operations in register
         self.running = True
-        self.run_codes = {
+        self.run_codes = {  # Branch table - long lost cusion of Webster
             0b10100000: self.ADD,
             0b10000010: self.LDI,
             0b01000111: self.PRN,
             0b00000001: self.HLT,
             0b10100010: self.MUL,
+            0b01000101: self.PUSH,
+            0b01000110: self.POP,
         }
+        self.sp = self.reg[7]  # Stack Pointer
+        # self.reg.append(0b11110100) # F4 in binary, used for sp
 
     def ram_read(self, MAR):
         """
@@ -145,11 +149,23 @@ class CPU:
         self.alu("SUB", operand_a, operand_b)
         self.pc += 3
 
-    def MUL(self, operand_a, operand_b):  # multiply the next two
+    def MUL(self, operand_a, operand_b):  # Multiply the next two
         self.alu("MUL", operand_a, operand_b)
         self.pc += 3
 
+    def POP(self, operand_a, operand_b):
+        value = self.ram[self.sp]  # What to store
+        self.reg[operand_a] = value  # Where to store it
+        self.sp += 1
+        self.pc += 2
 
-###############################################
-# Run with `python3 ls8.py examples/mult.ls8` #
-###############################################
+    def PUSH(self, operand_a, operand_b):
+        """Push onto the stack"""
+        self.sp += -1  # -=
+        self.ram[self.sp] = self.reg[operand_a]
+        self.pc += 2
+
+
+################################################
+# Run with `python3 ls8.py examples/stack.ls8` #
+################################################
