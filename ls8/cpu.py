@@ -12,6 +12,13 @@ class CPU:
         self.ram = [None] * 256  # Memory
         self.pc = 0  # Pointer to track operations in register
         self.running = True
+        self.run_codes = {
+            0b10100000: self.ADD,
+            0b10000010: self.LDI,
+            0b01000111: self.PRN,
+            0b00000001: self.HLT,
+            0b10100010: self.MUL,
+        }
 
     def ram_read(self, MAR):
         """
@@ -27,35 +34,55 @@ class CPU:
         """
         self.ram[MAR] = MDR
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
+        if len(sys.argv) != 2:
+            print("Sorry, please try again")
+            sys.exit()
 
-        address = 0
+        filename = sys.argv[1]
 
-        # For now, we've just hardcoded a program:
+        try:
+            address = 0
+            with open(filename, "r") as file:
+                for line in file:
+                    # Get rid of Commentary
+                    split_line = line.split("#")[0]
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+                    # Strip spaces
+                    command = split_line.strip()
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                    # If everything works - continue on
+                    if command == "":
+                        continue
+
+                    # Convert command from string to binary
+                    instruction = int(command, 2)
+
+                    # Import & load the commands into RAM?
+                    self.ram[address] = instruction
+
+                    # Incrament the address to avoide continually loading the program
+                    address += 1
+
+        except Exception:
+            print(
+                f"""\nAn Error Occoured:\n\
+            The file was not found: {filename}
+            Check the filepath and spelling.\n"""
+            )
+            sys.exit()
 
     def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
+        """ALU operations. arithmetic logic unit"""
+
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "SUB":
             self.reg[reg_a] += -self.reg[reg_b]
         elif op == "MUL":
-            self.reg[reg_a] *= self.reg[reg_b]
+            product = self.reg[reg_a] * self.reg[reg_b]
+            self.reg[reg_a] = product
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -84,36 +111,45 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        """
-        10000010 # LDI R0,8
-        00000000
-        00001000
-        01000111 # PRN R0
-        00000000
-        00000001 # HLT
-        """
-        # These are instructions we need to translate
-        LDI = 0b10000010
-        PRN = 0b01000111
-        HLT = 0b00000001
 
         while self.running:
-            IR = self.ram[self.pc]  # Instruction Register
+            IR = self.ram_read(self.pc)  # Instruction Register
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-            if IR == HLT:
+
+            if IR in self.run_codes:
+                self.run_codes[IR](operand_a, operand_b)
+
+            else:
+                print("That command doesn't exist")
                 self.running = False
 
-            elif IR == LDI:  # Set the value of a register to an integer
-                self.ram_write(self.pc + 1, operand_b)
-                self.reg[self.pc] = operand_b
-                self.pc += 3
+    def HLT(self, operand_a, operand_b):
+        self.running = False
 
-            elif IR == PRN:  # Print value stored at register
-                print(self.reg[operand_a])
-                self.pc += 2
+    def PRN(self, operand_a, operand_b):
+        # opA is the reg index to print
+        print(self.reg[operand_a])
+        self.pc += 2
+
+    def LDI(self, operand_a, operand_b):
+        # opA is the value, opB is the value to set
+        self.reg[operand_a] = operand_b
+        self.pc += 3
+
+    def ADD(self, operand_a, operand_b):
+        self.alu("ADD", operand_a, operand_b)
+        self.pc += 3
+
+    def SUB(self, operand_a, operand_b):
+        self.alu("SUB", operand_a, operand_b)
+        self.pc += 3
+
+    def MUL(self, operand_a, operand_b):  # multiply the next two
+        self.alu("MUL", operand_a, operand_b)
+        self.pc += 3
 
 
-#############################
-# Run with `python3 ls8.py` #
-#############################
+###############################################
+# Run with `python3 ls8.py examples/mult.ls8` #
+###############################################
