@@ -1,0 +1,22 @@
+3 # SAVE_REG R0,37
+0
+37
+4 # PRINT_REG R0
+0
+
+3 # SAVE_REG R1,13
+1
+13
+
+7 # CALL R1
+1
+7 # CALL R1
+1
+
+2 # HALT
+
+# Subroutine:
+1 # PRINT_BEEJ  # address 13
+1 # PRINT_BEEJ
+1 # PRINT_BEEJ
+8 # RET

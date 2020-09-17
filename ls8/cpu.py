@@ -20,9 +20,12 @@ class CPU:
             0b10100010: self.MUL,
             0b01000101: self.PUSH,
             0b01000110: self.POP,
+            0b01010000: self.CALL,
+            0b00010001: self.RET,
         }
-        self.sp = self.reg[7]  # Stack Pointer
-        # self.reg.append(0b11110100) # F4 in binary, used for sp
+        self.sp = self.reg[7] = 0xF4  # Stack Pointer
+        # self.reg.append(0b11110100)  # F4 in binary, used for sp
+        # self.sp = 0xF4
 
     def ram_read(self, MAR):
         """
@@ -165,7 +168,21 @@ class CPU:
         self.ram[self.sp] = self.reg[operand_a]
         self.pc += 2
 
+    def CALL(self, operand_a, operand_b):
+        next_funct_addr = self.pc + 2
+        self.PUSH_ANY(next_funct_addr)
+        self.pc = self.reg[operand_a]
 
-################################################
-# Run with `python3 ls8.py examples/stack.ls8` #
-################################################
+    def PUSH_ANY(self, value):
+        self.sp += -1
+        self.ram[self.sp] = value
+
+    def RET(self, operand_a, operand_b):
+        """Pop val from stack to pc"""
+        self.pc = self.ram[self.sp]
+        self.sp += 1
+
+
+###############################################
+# Run with `python3 ls8.py examples/call.ls8` #
+###############################################
