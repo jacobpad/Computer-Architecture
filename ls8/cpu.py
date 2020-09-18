@@ -12,6 +12,7 @@ class CPU:
         self.ram = [None] * 256  # Memory
         self.pc = 0  # Pointer to track operations in register
         self.running = True
+        self.sp = self.reg[7] = 0xF4
         self.run_codes = {  # Branch table - long lost cusion of Webster
             0b10100000: self.ADD,
             0b10000010: self.LDI,
@@ -22,10 +23,20 @@ class CPU:
             0b01000110: self.POP,
             0b01010000: self.CALL,
             0b00010001: self.RET,
+            ##########################
+            # v SPRINT v CHALLENGE v #
+            ##########################
+            0b10100111: self.CMP,
+            0b01010100: self.JMP,
+            0b01010101: self.JEQ,
+            0b01010110: self.JNE,
         }
-        self.sp = self.reg[7] = 0xF4  # Stack Pointer
-        # self.reg.append(0b11110100)  # F4 in binary, used for sp
-        # self.sp = 0xF4
+        self.E_flag = 0
+        self.L_flag = 0
+        self.G_flag = 0
+        ##########################
+        # ^ SPRINT ^ CHALLENGE ^ #
+        ##########################
 
     def ram_read(self, MAR):
         """
@@ -182,7 +193,52 @@ class CPU:
         self.pc = self.ram[self.sp]
         self.sp += 1
 
+    ########################
+    #  SPRINT   CHALLENGE  #
+    # 0b10100111: self.CMP #
+    # 0b01010100: self.JMP #
+    # 0b01010101: self.JEQ #
+    # 0b01010110: self.JNE #
+    # v        vv        v #
+    ########################
 
-###############################################
-# Run with `python3 ls8.py examples/call.ls8` #
-###############################################
+    def CMP(self, operand_a, operand_b):
+        if self.reg[operand_a] == self.reg[operand_b]:
+            self.G_flag = 0
+            self.L_flag = 0
+            self.E_flag = 1
+        if self.reg[operand_a] < self.reg[operand_b]:
+            self.G_flag = 0
+            self.L_flag = 1
+            self.E_flag = 0
+        if self.reg[operand_a] > self.reg[operand_b]:
+            self.G_flag = 1
+            self.L_flag = 0
+            self.E_flag = 0
+
+        self.pc += 3
+
+    def JMP(self, operand_a, operand_b):
+        addr = self.reg[operand_a]
+        self.pc = addr
+
+    def JEQ(self, operand_a, operand_b):
+        if self.E_flag == 1:
+            self.JMP(operand_a, operand_b)
+        else:
+            self.pc += 2
+
+    def JNE(self, operand_a, operand_b):
+        if self.E_flag == 0:
+            self.JMP(operand_a, operand_b)
+        else:
+            self.pc += 2
+
+    ##########################
+    # ^ SPRINT ^ CHALLENGE ^ #
+    ##########################
+
+
+#################################################
+# Run with `python3 ls8.py examples/sctest.ls8` #
+#################################################
