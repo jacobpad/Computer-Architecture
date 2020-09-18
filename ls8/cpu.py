@@ -101,6 +101,26 @@ class CPU:
         elif op == "MUL":
             product = self.reg[reg_a] * self.reg[reg_b]
             self.reg[reg_a] = product
+        ##########################
+        # v SPRINT v CHALLENGE v #
+        ##########################
+        elif op == "CMP":
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.G_flag = 0
+                self.L_flag = 0
+                self.E_flag = 1
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.G_flag = 0
+                self.L_flag = 1
+                self.E_flag = 0
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.G_flag = 1
+                self.L_flag = 0
+                self.E_flag = 0
+        ##########################
+        # ^ SPRINT ^ CHALLENGE ^ #
+        ##########################
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -203,19 +223,7 @@ class CPU:
     ########################
 
     def CMP(self, operand_a, operand_b):
-        if self.reg[operand_a] == self.reg[operand_b]:
-            self.G_flag = 0
-            self.L_flag = 0
-            self.E_flag = 1
-        if self.reg[operand_a] < self.reg[operand_b]:
-            self.G_flag = 0
-            self.L_flag = 1
-            self.E_flag = 0
-        if self.reg[operand_a] > self.reg[operand_b]:
-            self.G_flag = 1
-            self.L_flag = 0
-            self.E_flag = 0
-
+        self.alu("CMP", operand_a, operand_b)
         self.pc += 3
 
     def JMP(self, operand_a, operand_b):
